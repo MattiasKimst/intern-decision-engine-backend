@@ -3,7 +3,9 @@ What I see is well done is exception handling, different specific exceptions wit
 for different scenarios like invalidPersonalCodeException.
 This way is easy to determine invalid input values and types. The code is readable, 
 variable and method names are meaningful, comments are mostly sufficient to understand code. Encapsulation is good, e.g having separate methods for logic 
-regarding the loan calculation,  input validation, credit modifier calculation, and loan amount  determination.
+regarding the loan calculation,  input validation, credit modifier calculation, and loan amount  determination (will describe later what's still wrong with them)
+A good thing is that junit tests cover the logic of DecisionEngine for main cases (might consider covering more edge and negative cases).
+
 
 ### "as well as places for improvement."
 
@@ -37,11 +39,19 @@ The first for loop increases loan period until the highest acceptable loan amoun
 It is unnecessary to use a for loop here, we can simply calculate it by using formula derived from credit score formula when score = 1, longer or equal period than this means score>=1 and is thus approved
 
 
-CreditModifier is defined as a class variable, however, it is different for each separate decision, there is a risk that
-if somehow we fail to calculate a new modifier value, the old incorrect value is still in memory and we use it for new decision.
+CreditModifier is defined as a class variable, however, it is different for each separate decision and is not a class 
+variable by nature, there is a risk that if somehow we fail to calculate a new modifier value, the old incorrect value is 
+still in memory and we use it for new decision.
 Therefore, it is better to instantiate creditModifier for each decision separately with value 0 at the beginning.
 
-#### The biggest issue is with following single responsibility principle
+
+Project structure does not follow best practices for Spring Boot projects. Decision class in service directory is not a 
+service but data model, should be in model's directory. The same goes with DecisionRequest and DecisionResponse, i'd move
+them to models directory and rename endpoint directory as controller.
+
+
+## The biggest issue is with following single responsibility principle
 In general, having one class for various logic is not a good practice making project less maintainable. It is violating single responsibility principle in SOLID principles
 which states that each different responsibility should be defined in different class, e.g input validation, credit modifier calculation, loan amount determination.
-I refactored DecisionEngine by creating separate services for each responsibility.
+I refactored DecisionEngine by creating separate services for each responsibility. Also, it is worth considering refactoring
+those classes as interfaces and their implementations to follow open/closed principle.
